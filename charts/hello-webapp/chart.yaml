@@ -1,0 +1,5 @@
+apiVersion: v2
+name: hello-webapp
+description: A minimal Hello World webapp
+version: 0.1.0
+appVersion: "1.0.0"
