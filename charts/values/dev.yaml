@@ -1,0 +1,5 @@
+# dev.yaml – only the image tag is templated
+
+image:
+  # repository inherited from common.yaml
+  tag: "{{ .StateValues.imageTag }}"

@@ -1,0 +1,14 @@
+repositories:
+  - name: stable
+    url: https://charts.helm.sh/stable
+
+environments:
+  dev:
+    values: [values/common.yaml, values/dev.yaml]
+  qt:
+    values: [values/common.yaml, values/qt.yaml]
+  testing:
+    values: [values/common.yaml, values/testing.yaml]
+
+stateValues:
+  imageTag: "{{ env \"IMAGE_TAG\" }}"

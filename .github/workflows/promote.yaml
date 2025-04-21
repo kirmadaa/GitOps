@@ -1,78 +1,23 @@
-name: Promote Image Tag
-
+name: Promote
 on:
   repository_dispatch:
     types: [promote]
-  # optional manual trigger:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Docker image tag'
-        required: true
-
 jobs:
-  deploy-dev:
-    name: Bump dev tag
+  bump-dev:
     runs-on: self-hosted
     environment: dev
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set IMAGE_TAG
-        run: echo "IMAGE_TAG=${{ github.event.client_payload.tag || github.event.inputs.tag }}" >> $GITHUB_ENV
-      - name: Update dev.yaml
-        run: |
-          yq -i '.image.tag = strenv(IMAGE_TAG)' values/dev.yaml
-      - name: Commit & Push dev
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add values/dev.yaml
-          git commit -m "chore: bump dev image tag to $IMAGE_TAG"
-          git push
-
-  deploy-qt:
-    name: Bump qt tag (manual)
-    needs: deploy-dev
+      - run: echo "IMAGE_TAG=${{ github.event.client_payload.tag }}" >> $GITHUB_ENV
+      - run: yq -i '.image.tag = strenv(IMAGE_TAG)' values/dev.yaml
+      - run: git commit -am "dev → $IMAGE_TAG" && git push
+  bump-qt:
+    needs: bump-dev
     runs-on: self-hosted
     environment: qt
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set IMAGE_TAG
-        run: echo "IMAGE_TAG=${{ github.event.client_payload.tag }}" >> $GITHUB_ENV
-      - name: Update qt.yaml
-        run: yq -i '.image.tag = strenv(IMAGE_TAG)' values/qt.yaml
-      - name: Commit & Push qt
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add values/qt.yaml
-          git commit -m "chore: bump qt image tag to $IMAGE_TAG"
-          git push
-
-  deploy-testing:
-    name: Bump testing tag (manual)
-    needs: deploy-qt
+    steps: … (same for `values/qt.yaml`)
+  bump-testing:
+    needs: bump-qt
     runs-on: self-hosted
     environment: testing
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set IMAGE_TAG
-        run: echo "IMAGE_TAG=${{ github.event.client_payload.tag }}" >> $GITHUB_ENV
-      - name: Update testing.yaml
-        run: yq -i '.image.tag = strenv(IMAGE_TAG)' values/testing.yaml
-      - name: Commit & Push testing
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add values/testing.yaml
-          git commit -m "chore: bump testing image tag to $IMAGE_TAG"
-          git push
+    steps: … (same for `values/testing.yaml`)
