@@ -1,0 +1,6 @@
+replicaCount: 1
+image:
+  repository: my-app-dev
+  tag: latest
+service:
+  port: 8080

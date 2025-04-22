@@ -1,0 +1,6 @@
+replicaCount: 2
+image:
+  repository: my-app-qt
+  tag: "" # Will be filled by promote.yaml
+service:
+  port: 8080

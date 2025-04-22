@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: environment-promotion
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/kirmadaa/GitOps.git
+      revision: HEAD
+      files:
+      - path: "environments/promote.yaml"
+  template:
+    metadata:
+      name: '{{index .promote "promotedFrom"}}-to-{{.environment.name}}'
+    spec:
+      project: default
+      source:
+        repoURL: 'https://github.com/kirmadaa/GitOps.git'
+        targetRevision: HEAD
+        path: charts/my-app
+        helm:
+          valueFiles:
+          - 'environments/{{.environment.name}}/values.yaml'
+          - 'environments/promote.yaml'
+      destination:
+        server: 'https://kubernetes.default.svc'
+        namespace: '{{.environment.name}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true

@@ -1,0 +1,46 @@
+name: Deploy to QT
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - 'environments/promote.yaml'
+
+jobs:
+  check-promotion:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      is-promotion: ${{ steps.check-label.outputs.promotion }}
+    steps:
+    - name: Check for Promotion Label
+      id: check-label
+      run: |
+        if gh pr view ${{ github.event.pull_request.number }} --json labels | jq -e '.labels[] | select(.name == "promotion")'; then
+          echo "promotion=true" >> $GITHUB_OUTPUT
+        else
+          echo "promotion=false" >> $GITHUB_OUTPUT
+        fi
+        
+  deploy:
+    needs: check-promotion
+    if: needs.check-promotion.outputs.is-promotion == 'true'
+    runs-on: self-hosted
+    environment: 
+      name: qt
+      url: https://your-qt-environment-url.com
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      
+    - name: Install Helmfile
+      run: |
+        curl -fsSL -o helmfile_linux_amd64 https://github.com/roboll/helmfile/releases/download/v0.144.0/helmfile_linux_amd64
+        chmod +x helmfile_linux_amd64
+        sudo mv helmfile_linux_amd64 /usr/local/bin/helmfile
+        
+    - name: Deploy to QT
+      run: |
+        helmfile -e qt apply

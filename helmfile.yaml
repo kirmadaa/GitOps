@@ -1,14 +1,25 @@
 repositories:
-  - name: stable
-    url: https://charts.helm.sh/stable
+- name: stable
+  url: https://charts.helm.sh/stable
 
 environments:
   dev:
-    values: [values/common.yaml, values/dev.yaml]
+    values:
+    - environments/dev/values.yaml
   qt:
-    values: [values/common.yaml, values/qt.yaml]
+    values:
+    - environments/qt/values.yaml
+    - environments/promote.yaml
   testing:
-    values: [values/common.yaml, values/testing.yaml]
+    values:
+    - environments/testing/values.yaml
+    - environments/promote.yaml
 
-stateValues:
-  imageTag: "{{ env \"IMAGE_TAG\" }}"
+releases:
+- name: my-app
+  namespace: {{ .Environment.Name }}
+  chart: ./charts/my-app
+  values:
+  - "environments/{{ .Environment.Name }}/values.yaml"
+  wait: true
+  timeout: 300
