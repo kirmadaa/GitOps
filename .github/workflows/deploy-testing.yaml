@@ -1,4 +1,4 @@
-name: Deploy to QT
+name: Deploy to Testing
 on:
   pull_request:
     types: [closed]
@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is-promotion: ${{ steps.check-label.outputs.promotion }}
+      target-environment: ${{ steps.check-environment.outputs.env }}
     steps:
     - name: Check for Promotion Label
       id: check-label
@@ -22,25 +23,46 @@ jobs:
           echo "promotion=false" >> $GITHUB_OUTPUT
         fi
         
+    - name: Determine Target Environment
+      id: check-environment
+      run: |
+        if gh pr view ${{ github.event.pull_request.number }} --json labels | jq -e '.labels[] | select(.name == "testing")'; then
+          echo "env=testing" >> $GITHUB_OUTPUT
+        else
+          echo "env=none" >> $GITHUB_OUTPUT
+        fi
+
   deploy:
     needs: check-promotion
-    if: needs.check-promotion.outputs.is-promotion == 'true'
-    runs-on: self-hosted
+    if: needs.check-promotion.outputs.is-promotion == 'true' && needs.check-promotion.outputs.target-environment == 'testing'
+    runs-on: ubuntu-latest
     environment: 
-      name: qt
-      url: https://kubernetes.default.svc
+      name: testing
+      url: hhttps://kubernetes.default.svc
     steps:
     - uses: actions/checkout@v3
     
     - name: Setup Helm
       uses: azure/setup-helm@v3
-      
+      with:
+        version: v3.10.1
+        
     - name: Install Helmfile
       run: |
         curl -fsSL -o helmfile_linux_amd64 https://github.com/roboll/helmfile/releases/download/v0.144.0/helmfile_linux_amd64
         chmod +x helmfile_linux_amd64
         sudo mv helmfile_linux_amd64 /usr/local/bin/helmfile
         
-    - name: Deploy to QT
+    - name: Validate Deployment
       run: |
-        helmfile -e qt apply
+        helmfile -e testing lint
+        helmfile -e testing diff
+        
+    - name: Deploy to Testing
+      run: |
+        helmfile -e testing apply
+        
+    - name: Verify Deployment
+      run: |
+        kubectl get pods -n testing
+        kubectl get deployments -n testing

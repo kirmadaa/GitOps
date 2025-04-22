@@ -1,0 +1,38 @@
+name: Promote to Testing
+on:
+  workflow_run:
+    workflows: ["Deploy to QT"]
+    types:
+      - completed
+
+jobs:
+  promote:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      
+    - name: Get QT Image Tag
+      id: get-tag
+      run: |
+        TAG=$(helmfile -e qt template | grep "image:" | awk -F':' '{print $3}' | tr -d ' ' | tr -d '"')
+        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+      
+    - name: Create Promotion File
+      run: |
+        echo "image:" > environments/promote.yaml
+        echo "  tag: ${{ steps.get-tag.outputs.tag }}" >> environments/promote.yaml
+        echo "promotedFrom: qt" >> environments/promote.yaml
+        echo "promotionTime: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> environments/promote.yaml
+        
+    - name: Create PR for Testing
+      uses: peter-evans/create-pull-request@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        branch: promote/testing-${{ steps.get-tag.outputs.tag }}
+        base: main
+        title: "[PROMOTE] QT to Testing: ${{ steps.get-tag.outputs.tag }}"
+        body: |
+          Automatically promoted from QT environment
+          Image Tag: ${{ steps.get-tag.outputs.tag }}
+        labels: promotion,testing
