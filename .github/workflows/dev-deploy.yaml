@@ -26,4 +26,4 @@ jobs:
         
     - name: Deploy to Dev
       run: |
-        helmfile -e dev apply --auto-approve
+        helmfile -e dev apply --skip-diff-on-install --suppress-secrets
