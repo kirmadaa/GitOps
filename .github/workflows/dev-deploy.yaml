@@ -30,6 +30,6 @@ jobs:
         chmod +x helmfile_linux_amd64
         sudo mv helmfile_linux_amd64 /usr/local/bin/helmfile
         
-    - name: Deploy to Dev
+    - name: Deploy with Helmfile
       run: |
         helmfile -e dev apply --skip-diff-on-install --suppress-secrets
