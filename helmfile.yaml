@@ -5,21 +5,21 @@ repositories:
 environments:
   dev:
     values:
-    - ./environments/dev/values.yaml
+    - ${PWD}/environments/dev/values.yaml
   qt:
     values:
-    - ./environments/qt/values.yaml
-    - ./environments/promote.yaml
+    - ${PWD}/environments/qt/values.yaml
+    - ${PWD}/environments/promote.yaml
   testing:
     values:
-    - ./environments/testing/values.yaml
-    - ./environments/promote.yaml
+    - ${PWD}/environments/testing/values.yaml
+    - ${PWD}/environments/promote.yaml
 
 releases:
 - name: my-app
   namespace: {{ .Environment.Name }}
-  chart: ./charts/my-app
+  chart: ${PWD}/charts/my-app
   values:
-  - "./environments/{{ .Environment.Name }}/values.yaml"
+  - "${PWD}/environments/{{ .Environment.Name }}/values.yaml"
   wait: true
   timeout: 300
