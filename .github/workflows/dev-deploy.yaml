@@ -11,25 +11,29 @@ jobs:
     runs-on: self-hosted
     environment: dev
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Helm
-      uses: azure/setup-helm@v3
-      with:
-        version: v3.10.1
+      - uses: actions/checkout@v3
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.10.1
 
-    - name: Validate file structure
-      run: | 
-        ls -la
-        ls -la environments/dev/
-        ls -la charts/my-app/
-        
-    - name: Install Helmfile
-      run: |
-        curl -fsSL -o helmfile_linux_amd64 https://github.com/roboll/helmfile/releases/download/v0.144.0/helmfile_linux_amd64
-        chmod +x helmfile_linux_amd64
-        sudo mv helmfile_linux_amd64 /usr/local/bin/helmfile
-        
-    - name: Deploy with Helmfile
-      run: |
-        helmfile -e dev apply 
+      - name: Install Helm Diff Plugin
+        run: |
+          helm plugin install https://github.com/databus23/helm-diff --version v3.6.0
+
+      - name: Validate file structure
+        run: | 
+          ls -la
+          ls -la environments/dev/
+          ls -la charts/my-app/
+          
+      - name: Install Helmfile
+        run: |
+          curl -fsSL -o helmfile_linux_amd64 https://github.com/roboll/helmfile/releases/download/v0.144.0/helmfile_linux_amd64
+          chmod +x helmfile_linux_amd64
+          sudo mv helmfile_linux_amd64 /usr/local/bin/helmfile
+          
+      - name: Deploy with Helmfile
+        run: |
+          helmfile -e dev apply
