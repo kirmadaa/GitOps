@@ -1,8 +1,7 @@
 name: Deploy to QT
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
+  push: 
+    branches: main
     paths:
       - 'environments/promote.yaml'
 
