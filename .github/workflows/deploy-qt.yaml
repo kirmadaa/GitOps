@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-promotion:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true 
     runs-on: ubuntu-latest
     outputs:
       is-promotion: ${{ steps.check-label.outputs.promotion }}
