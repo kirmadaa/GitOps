@@ -7,24 +7,12 @@ on:
 
 jobs:
   check-promotion:
-    if: github.event.pull_request.merged == true 
+
     runs-on: ubuntu-latest
-    outputs:
-      is-promotion: ${{ steps.check-label.outputs.promotion }}
-    steps:
-    - name: Check for Promotion Label
-      id: check-label
-      run: |
-        if gh pr view ${{ github.event.pull_request.number }} --json labels | jq -e '.labels[] | select(.name == "promotion")'; then
-          echo "promotion=true" >> $GITHUB_OUTPUT
-        else
-          echo "promotion=false" >> $GITHUB_OUTPUT
-        fi
-        
+
   deploy:
     needs: check-promotion
-    if: needs.check-promotion.outputs.is-promotion == 'true'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment: 
       name: qt
       url: https://kubernetes.default.svc
